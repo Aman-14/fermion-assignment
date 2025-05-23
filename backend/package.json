@@ -1,0 +1,26 @@
+{
+  "name": "fermion",
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "fluent-ffmpeg": "^2.1.3",
+    "get-port": "^7.1.0",
+    "mediasoup": "^3.15.8",
+    "socket.io": "^4.8.1",
+    "ws": "^8.18.2"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.2",
+    "@types/fluent-ffmpeg": "^2.1.27",
+    "@types/node": "^20.11.17",
+    "@types/ws": "^8.18.1",
+    "tsx": "^4.7.1",
+    "typescript": "^5.8.3"
+  }
+}
