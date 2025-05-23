@@ -51,7 +51,12 @@ export function setupSocketServer(
         return;
       }
       const transportOptions: mediasoup.types.WebRtcTransportOptions = {
-        listenIps: [{ ip: "0.0.0.0", announcedIp: "127.0.0.1" }],
+        listenIps: [
+          {
+            ip: "0.0.0.0",
+            announcedIp: process.env.ANNOUNCE_IP || "127.0.0.1",
+          },
+        ],
         enableSctp: true,
         enableUdp: true,
         enableTcp: true,
