@@ -1,4 +1,3 @@
-export const SERVER_URL = "/api";
-export const HLS_STREAM_PATH = "/hls/live.m3u8";
-export const HLS_STREAM_URL = `${SERVER_URL}${HLS_STREAM_PATH}`;
-export const SOCKET_PATH = "/api/socket.io/";
+export const SERVER_URL = process.env.NEXT_PUBLIC_SERVER_URL;
+export const HLS_STREAM_URL = `${SERVER_URL}/hls/live.m3u8`;
+export const SOCKET_PATH = process.env.NEXT_PUBLIC_SOCKET_PATH;
