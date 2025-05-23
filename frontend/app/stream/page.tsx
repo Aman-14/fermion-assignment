@@ -37,7 +37,7 @@ function StreamPageContent() {
       {
         path: SOCKET_PATH,
         transports: ["websocket"],
-      },
+      }
     );
 
     // Create Peer instance
@@ -55,10 +55,26 @@ function StreamPageContent() {
           const { stream } = await peerInstance.onNewProducer(producer.id);
           if (producer.kind === "video" && remoteVideoRef.current) {
             remoteVideoRef.current.srcObject = stream;
-            remoteVideoRef.current.play();
+            remoteVideoRef.current.play().catch((error) => {
+              if (error.name === "AbortError") {
+                console.warn(
+                  "Video play() request was interrupted by a new load. This is often expected."
+                );
+              } else {
+                console.error("Error playing video:", error);
+              }
+            });
           } else if (producer.kind === "audio" && remoteAudioRef.current) {
             remoteAudioRef.current.srcObject = stream;
-            remoteAudioRef.current.play();
+            remoteAudioRef.current.play().catch((error) => {
+              if (error.name === "AbortError") {
+                console.warn(
+                  "Audio play() request was interrupted by a new load. This is often expected."
+                );
+              } else {
+                console.error("Error playing audio:", error);
+              }
+            });
           }
         }
       });
@@ -79,10 +95,26 @@ function StreamPageContent() {
       const { stream } = await peerInstance.onNewProducer(data.id);
       if (data.kind === "video" && remoteVideoRef.current) {
         remoteVideoRef.current.srcObject = stream;
-        remoteVideoRef.current.play();
+        remoteVideoRef.current.play().catch((error) => {
+          if (error.name === "AbortError") {
+            console.warn(
+              "Video play() request was interrupted by a new load. This is often expected."
+            );
+          } else {
+            console.error("Error playing video:", error);
+          }
+        });
       } else if (data.kind === "audio" && remoteAudioRef.current) {
         remoteAudioRef.current.srcObject = stream;
-        remoteAudioRef.current.play();
+        remoteAudioRef.current.play().catch((error) => {
+          if (error.name === "AbortError") {
+            console.warn(
+              "Audio play() request was interrupted by a new load. This is often expected."
+            );
+          } else {
+            console.error("Error playing audio:", error);
+          }
+        });
       }
     });
 
