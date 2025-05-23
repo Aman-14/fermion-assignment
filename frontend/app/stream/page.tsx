@@ -3,10 +3,14 @@
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useRef, useState } from "react"; // Added Suspense
 import { io, Socket } from "socket.io-client";
+import { SERVER_URL, SOCKET_PATH } from "../constants";
 import { Peer } from "./peer";
 import { socketRpc } from "./socketRpc";
 import type { ClientToServerEvents, ServerToClientEvents } from "./types";
-import { SOCKET_PATH, SOCKET_SERVER_URL } from "../constants";
+
+function getSocketUrl() {
+  return SERVER_URL === "/api" ? window.location.origin : SERVER_URL;
+}
 
 // Component containing the actual page logic and UI
 function StreamPageContent() {
@@ -29,7 +33,7 @@ function StreamPageContent() {
 
     // Initialize socket.io connection
     const socket: Socket<ServerToClientEvents, ClientToServerEvents> = io(
-      SOCKET_SERVER_URL,
+      getSocketUrl(),
       {
         path: SOCKET_PATH,
         transports: ["websocket"],
