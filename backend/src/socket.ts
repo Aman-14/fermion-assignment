@@ -79,10 +79,9 @@ export function setupSocketServer(
           state.transports.delete(transport.id);
         }
       });
-      // TODO: read about it
       transport.on("icestatechange", (iceState) => {
         console.log(
-          `Send transport ICE state for ${socket.id} ${transport.id}: ${iceState}`,
+          `Transport ICE state for ${state.username} ${socket.id} ${transport.id}: ${iceState}`,
         );
       });
       state.transports.set(transport.id, transport);

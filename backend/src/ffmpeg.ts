@@ -72,7 +72,7 @@ export class FFmpeg {
       throw new Error("Process already started");
     }
     const outputDir = path.join(process.cwd(), "public", "hls");
-    await fs.promises.rm(outputDir, { recursive: true });
+    await fs.promises.rm(outputDir, { recursive: true, force: true });
     await new Promise((res) => setTimeout(res, 5000));
     await fs.promises.mkdir(outputDir, { recursive: true });
 
