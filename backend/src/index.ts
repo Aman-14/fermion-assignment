@@ -1,3 +1,6 @@
+import { config } from "dotenv-flow";
+config();
+
 import express from "express";
 import http from "http";
 import { FFmpeg } from "./ffmpeg.js";
