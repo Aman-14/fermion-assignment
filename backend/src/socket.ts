@@ -38,6 +38,10 @@ export function setupSocketServer(
 
     socket.emit("connected");
 
+    socket.on("disconnect", () => {
+      streams.delete(socket.id);
+    });
+
     socket.on("get-rtp-capabilities", (ack) => {
       ack(router.rtpCapabilities);
     });
