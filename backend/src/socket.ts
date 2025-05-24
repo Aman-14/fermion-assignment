@@ -6,6 +6,9 @@ import type { ClientToServerEvents, ServerToClientEvents } from "./types.js";
 export function setupSocketServer(
   httpServer: http.Server,
   router: mediasoup.types.Router,
+  callbacks?: {
+    onDisconnect?: (socketId: string) => unknown;
+  },
 ) {
   const io = new Server<ClientToServerEvents, ServerToClientEvents>(
     httpServer,
@@ -39,7 +42,23 @@ export function setupSocketServer(
     socket.emit("connected");
 
     socket.on("disconnect", () => {
+      const state = streams.get(socket.id);
+      if (!state) {
+        return;
+      }
+      for (const transport of state.transports.values()) {
+        transport.close();
+      }
+      for (const producer of state.producers.values()) {
+        producer.close();
+      }
+      for (const consumer of state.consumers.values()) {
+        consumer.close();
+      }
       streams.delete(socket.id);
+      if (callbacks?.onDisconnect) {
+        callbacks.onDisconnect(socket.id);
+      }
     });
 
     socket.on("get-rtp-capabilities", (ack) => {

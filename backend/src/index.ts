@@ -25,9 +25,18 @@ const server = http.createServer(app);
 let ffmpeg: FFmpeg | undefined = undefined;
 
 const { router, worker } = await setupMediasoup();
-const { streams } = setupSocketServer(server, router);
+const { streams } = setupSocketServer(server, router, {
+  // kill the ffmpeg process when the client disconnects
+  onDisconnect: () => {
+    if (ffmpeg) {
+      console.log("Killing ffmpeg process");
+      ffmpeg.kill();
+      ffmpeg = undefined;
+    }
+  },
+});
 
-app.post("/watch", async (_, res) => {
+app.post("/watch", async (_req, res) => {
   if (!ffmpeg) {
     // For now, we support streams of only 2 peers
     if (streams.size !== 2) {
@@ -47,6 +56,7 @@ app.post("/watch", async (_, res) => {
     }
     await ffmpeg.start();
   }
+
   res.sendStatus(200);
 });
 
