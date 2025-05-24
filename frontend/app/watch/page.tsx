@@ -41,7 +41,7 @@ export default function WatchPage() {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
                 setError(
-                  "Stream not found or network error. Please try again later.",
+                  "Stream not found or network error. Please try again later."
                 );
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
@@ -77,29 +77,47 @@ export default function WatchPage() {
     }
   }, []);
 
-  // Notify backend and then setup stream
   useEffect(() => {
+    const controller = new AbortController();
+    const { signal } = controller;
     let cleanup: (() => void) | undefined;
-    const start = async () => {
+    const pollWatchApi = async (retry = 0) => {
       setLoading(true);
       setError("");
-      setRetryCount(0);
-      try {
-        const res = await fetch(`${SERVER_URL}/watch`, { method: "POST" });
-        if (!res.ok) {
-          setError("Failed to start watching: backend error");
+      if (signal.aborted) return;
+      const res = await fetch(`${SERVER_URL}/watch`, {
+        method: "POST",
+        signal,
+      });
+      if (res.ok) {
+        if (!signal.aborted) {
+          cleanup = setupHls();
+        }
+        return;
+      }
+      if (res.status === 400) {
+        const data: { code: string; message: string } = await res.json();
+        if (data.code === "WAITING_FOR_PEERS") {
+          setError(
+            "Waiting for peers to join. There should be exactly 2 peers to start the streams."
+          );
           setLoading(false);
+          setTimeout(() => {
+            if (!signal.aborted) pollWatchApi(retry + 1);
+          }, RETRY_DELAY_MS);
           return;
         }
-      } catch {
-        setError("Failed to start watching: could not reach backend");
+        setError(data.message || "Failed to start watching: backend error");
         setLoading(false);
         return;
       }
-      cleanup = setupHls();
+      setError("Failed to start watching: backend error");
+      setLoading(false);
+      return;
     };
-    start();
+    pollWatchApi();
     return () => {
+      controller.abort();
       if (cleanup) cleanup();
     };
   }, [setupHls]);
