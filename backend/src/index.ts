@@ -1,12 +1,17 @@
 import { config } from "dotenv-flow";
 config();
 
-import express from "express";
+import cors from "cors";
+import express, {
+  type NextFunction,
+  type Request,
+  type Response,
+} from "express";
 import http from "http";
+import { BadRequestError } from "./error.js";
 import { FFmpeg } from "./ffmpeg.js";
 import { setupMediasoup } from "./mediasoup.js";
 import { setupSocketServer } from "./socket.js";
-import cors from "cors";
 
 const PORT = 8002;
 
@@ -24,6 +29,13 @@ const { streams } = setupSocketServer(server, router);
 
 app.post("/watch", async (_, res) => {
   if (!ffmpeg) {
+    // For now, we support streams of only 2 peers
+    if (streams.size !== 2) {
+      throw new BadRequestError(
+        "WAITING_FOR_PEERS",
+        "Please wait for the peers to join",
+      );
+    }
     ffmpeg = new FFmpeg(router);
     const producers = streams
       .values()
@@ -36,6 +48,14 @@ app.post("/watch", async (_, res) => {
     await ffmpeg.start();
   }
   res.sendStatus(200);
+});
+
+app.use((err: unknown, _req: Request, res: Response, _next: NextFunction) => {
+  if (err instanceof BadRequestError) {
+    res.status(400).json(err);
+    return;
+  }
+  res.status(500).json({ error: "Internal Server Error" });
 });
 
 app.get("/health", (_, res) => {
