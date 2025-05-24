@@ -31,3 +31,4 @@ public/hls
 ffmpeg_stream.sdp
 
 .local
+dist
