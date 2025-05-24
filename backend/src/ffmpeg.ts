@@ -132,16 +132,11 @@ export class FFmpeg {
   }
 
   async addConsumer(producer: medisaoup.types.Producer) {
-    console.log({ msg: "Adding consumer", kind: producer.kind });
-
-    console.log("STATS", await producer.getStats());
-
     const producerRtpParameters = producer.rtpParameters;
     const transport = await this.router.createPlainTransport({
       listenIp: "127.0.0.1",
     });
     this.transports.set(transport.id, transport);
-    console.dir({ producerRtpParameters }, { depth: null });
 
     // maek capabilities from producer
     const consumerRtpCapabilities: medisaoup.types.RtpCapabilities = {
@@ -191,9 +186,6 @@ export class FFmpeg {
   }
 
   kill() {
-    if (this.process) {
-      this.process.kill("SIGTERM"); // gracefully stop ffmpeg
-    }
     for (const transport of this.transports.values()) {
       transport.close();
     }
@@ -202,5 +194,8 @@ export class FFmpeg {
     }
     this.transports.clear();
     this.consumers.clear();
+    if (this.process) {
+      this.process.kill("SIGKILL"); // gracefully stop ffmpeg
+    }
   }
 }
