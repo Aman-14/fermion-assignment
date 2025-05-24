@@ -37,11 +37,35 @@ function StreamPageContent() {
       {
         path: SOCKET_PATH,
         transports: ["websocket"],
-      }
+        query: {
+          username,
+        },
+      },
     );
 
     // Create Peer instance
     const peerInstance = new Peer(socket);
+
+    async function handleNewProducer(producer: { id: string; kind: string }) {
+      if (peerInstance.isSelfProducer(producer.id)) {
+        console.log("Skipping self producer");
+        return;
+      }
+      const { stream } = await peerInstance.onNewProducer(producer.id);
+      if (producer.kind === "video" && remoteVideoRef.current) {
+        console.log("Setting remote video stream", stream);
+        remoteVideoRef.current.srcObject = stream;
+        remoteVideoRef.current.play().catch((error) => {
+          console.error("Error playing video:", error);
+        });
+      } else if (producer.kind === "audio" && remoteAudioRef.current) {
+        console.log("Setting remote audio stream", stream);
+        remoteAudioRef.current.srcObject = stream;
+        remoteAudioRef.current.play().catch((error) => {
+          console.error("Error playing audio:", error);
+        });
+      }
+    }
 
     socket.on("connected", async () => {
       const rtpCapabilities = await socketRpc(socket, "get-rtp-capabilities");
@@ -52,30 +76,7 @@ function StreamPageContent() {
 
       socket.emit("get-existing-producers", async (producers) => {
         for (const producer of producers) {
-          const { stream } = await peerInstance.onNewProducer(producer.id);
-          if (producer.kind === "video" && remoteVideoRef.current) {
-            remoteVideoRef.current.srcObject = stream;
-            remoteVideoRef.current.play().catch((error) => {
-              if (error.name === "AbortError") {
-                console.warn(
-                  "Video play() request was interrupted by a new load. This is often expected."
-                );
-              } else {
-                console.error("Error playing video:", error);
-              }
-            });
-          } else if (producer.kind === "audio" && remoteAudioRef.current) {
-            remoteAudioRef.current.srcObject = stream;
-            remoteAudioRef.current.play().catch((error) => {
-              if (error.name === "AbortError") {
-                console.warn(
-                  "Audio play() request was interrupted by a new load. This is often expected."
-                );
-              } else {
-                console.error("Error playing audio:", error);
-              }
-            });
-          }
+          await handleNewProducer(producer);
         }
       });
 
@@ -88,34 +89,12 @@ function StreamPageContent() {
     });
 
     socket.on("new-producer", async (data) => {
+      console.log("on new producer");
       if (!peerInstance) {
         console.warn("PEER INstance not found in new producer");
         return;
       }
-      const { stream } = await peerInstance.onNewProducer(data.id);
-      if (data.kind === "video" && remoteVideoRef.current) {
-        remoteVideoRef.current.srcObject = stream;
-        remoteVideoRef.current.play().catch((error) => {
-          if (error.name === "AbortError") {
-            console.warn(
-              "Video play() request was interrupted by a new load. This is often expected."
-            );
-          } else {
-            console.error("Error playing video:", error);
-          }
-        });
-      } else if (data.kind === "audio" && remoteAudioRef.current) {
-        remoteAudioRef.current.srcObject = stream;
-        remoteAudioRef.current.play().catch((error) => {
-          if (error.name === "AbortError") {
-            console.warn(
-              "Audio play() request was interrupted by a new load. This is often expected."
-            );
-          } else {
-            console.error("Error playing audio:", error);
-          }
-        });
-      }
+      await handleNewProducer(data);
     });
 
     socket.on("producer-closed", ({ producerId }) => {

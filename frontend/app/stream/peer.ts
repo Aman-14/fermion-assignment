@@ -124,6 +124,7 @@ export class Peer {
     });
     const consumer = await this.recvTransport.consume(data);
     this.consumers.set(consumer.id, consumer);
+    console.log("Consumer track", consumer.track);
     const stream = new MediaStream();
     stream.addTrack(consumer.track);
 
@@ -131,5 +132,9 @@ export class Peer {
       consumerId: consumer.id,
       stream,
     };
+  }
+
+  isSelfProducer(producerId: string) {
+    return this.producers.has(producerId);
   }
 }
