@@ -73,10 +73,7 @@ export class FFmpeg {
     }
     const outputDir = path.join(process.cwd(), "public", "hls");
     await fs.promises.rm(outputDir, { recursive: true, force: true });
-    await new Promise((res) => setTimeout(res, 5000));
     await fs.promises.mkdir(outputDir, { recursive: true });
-
-    await new Promise((res) => setTimeout(res, 5000));
 
     const outputM3u8 = path.join(outputDir, "live.m3u8");
     const segmentFilename = path.join(outputDir, "segment%05d.ts");
